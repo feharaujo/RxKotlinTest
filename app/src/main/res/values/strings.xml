@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">RxKotlinTest</string>
+    <string name="doSomeWork">do some work</string>
+</resources>
