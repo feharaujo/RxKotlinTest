@@ -4,10 +4,7 @@ import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 
-import kotlinx.android.synthetic.main.activity_map.*
-
 import com.example.felipet.rxkotlintest.R
-import com.example.felipet.rxkotlintest.model.ApiUser
 import com.example.felipet.rxkotlintest.model.User
 import com.example.felipet.rxkotlintest.utils.AppConstant
 import com.example.felipet.rxkotlintest.utils.Utils
@@ -15,50 +12,72 @@ import io.reactivex.Observable
 import io.reactivex.Observer
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
+import io.reactivex.functions.BiFunction
 import io.reactivex.schedulers.Schedulers
 
-class MapActivity : AppCompatActivity() {
+import kotlinx.android.synthetic.main.activity_zip.*
 
-    val TAG = "JUNO"
+class ZipActivity : AppCompatActivity() {
+
+    val TAG = "Juno"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_map)
+        setContentView(R.layout.activity_zip)
 
-        btn.setOnClickListener { doSomeWork() }
+        btn.setOnClickListener { doWork() }
     }
 
-    fun doSomeWork() {
-        getObservable()
+    private fun doWork() {
+        Observable.zip(getCricketFansObservable(), getFootballFansObservable(),
+                BiFunction<List<User>, List<User>, List<User>> { t1, t2 ->
+                    Utils.filterUserWhoLovesBoth(t1, t2)
+                })
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .map { Utils.convertApiUserListToUserList(it) }
                 .subscribe(getObserver())
     }
 
-    private fun getObservable(): Observable<List<ApiUser>> {
+    private fun getCricketFansObservable(): Observable<List<User>> {
         return Observable.create {
             if(!it.isDisposed) {
-                it.onNext(Utils.apiUserList)
+                it.onNext(Utils.userListWhoLovesCricket)
+                it.onComplete()
+            }
+        }
+    }
+
+    private fun getFootballFansObservable(): Observable<List<User>> {
+        return Observable.create {
+            if(!it.isDisposed) {
+                it.onNext(Utils.userListWhoLovesFootball)
                 it.onComplete()
             }
         }
     }
 
     private fun getObserver(): Observer<List<User>> {
-        return object : Observer<List<User>> {
-            override fun onSubscribe(d: Disposable?) {
-                Log.d(TAG, " onSubscribe : " + d?.isDisposed)
-            }
-
+        return object: Observer<List<User>> {
             override fun onNext(userList: List<User>?) {
                 textView.append(" onNext")
                 textView.append(AppConstant.LINE_SEPARATOR)
-                userList?.stream()?.forEach {
+
+                userList?.forEach {
                     textView.append(" firstname : " + it.firstname)
                     textView.append(AppConstant.LINE_SEPARATOR)
                 }
+
                 Log.d(TAG, " onNext : " + userList?.size)
+            }
+
+            override fun onError(e: Throwable?) {
+                textView.append(" onError : " + e?.message)
+                textView.append(AppConstant.LINE_SEPARATOR)
+                Log.d(TAG, " onError : " + e?.message)
+            }
+
+            override fun onSubscribe(d: Disposable?) {
+                Log.d(TAG, " onSubscribe : " + d?.isDisposed)
             }
 
             override fun onComplete() {
@@ -67,15 +86,6 @@ class MapActivity : AppCompatActivity() {
                 Log.d(TAG, " onComplete")
             }
 
-            override fun onError(e: Throwable?) {
-                if(e != null) {
-                    textView.append(" onError : " + e.message)
-                    textView.append(AppConstant.LINE_SEPARATOR)
-                    Log.d(TAG, " onError : " + e.message)
-                }
-            }
-
         }
     }
-
 }

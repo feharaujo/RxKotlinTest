@@ -16,7 +16,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".operators.MapActivity"></activity>
+        <activity android:name=".operators.MapActivity" />
+        <activity android:name=".operators.ZipActivity"></activity>
     </application>
 
 </manifest>
